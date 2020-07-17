@@ -1,0 +1,238 @@
+//CS 1134.102
+//Amina Hussain
+//Pong-Ball 
+
+//arrays for balls
+var xPosition = [];
+var yPosition = [];
+var xSpeed = [];
+var ySpeed = [];
+var ballColor = [];
+//variables for balls
+var maxBalls = (2);
+var ballR = 2.5;
+//paddle variables
+var paddleX = (215);
+var paddleY = (352);
+var paddleW = (92);
+var paddleH = (18); 
+//box variables 
+var xrect = (0);
+var yrect = (0);
+var w = (130);
+var h = (408);
+//score variable
+var score = 0;
+//timer variable
+var initialTime = millis();
+//reset button variables
+var buttonX = (14);
+var buttonY = (324);
+var buttonW = (99);
+var buttonH = (61); 
+
+//initialization of arrays
+for (var i = 0; i<maxBalls; i++){
+  xPosition.push(random(130, 400));
+  yPosition.push(0);
+  xSpeed.push(2);
+  ySpeed.push(2);
+ //randomizes ball color
+  ballColor.push(color(random(0,255),random(0,255),random(0,255)));
+}
+
+//constrains balls to only collide against paddle 
+var checkCollision = function(xPosition, yPosition, ballR, paddleX, paddleY, paddleW, paddleH){
+    var isColliding = false;
+//right edge of ball   
+    var leftEdgeCondition = (xPosition + ballR) > paddleX;
+//left edge of ball 
+    var rightEdgeCondition = (xPosition - ballR) < paddleX + paddleW; 
+//bottom edge of ball 
+    var topEdgeCondition = (yPosition + ballR) > paddleY;
+//top edge of ball 
+    var bottomEdgeCondition = (yPosition - ballR) < paddleY + paddleH; 
+//all conditions must be true for intersection / collision to occur
+    if(leftEdgeCondition && rightEdgeCondition && topEdgeCondition && bottomEdgeCondition){
+       isColliding = true;
+   }
+ 
+ return isColliding; 
+};
+
+//rectangles function
+var rectangle = function(xrect, yrect, w, h){
+    noStroke();
+    rect(xrect, yrect, w, h);
+};
+
+//reset button function
+var drawButton = function(buttonX, buttonY, buttonW, buttonH){
+    fill(148, 53, 242);
+    rect(buttonX, buttonY, buttonW, buttonH);
+    fill(0, 0, 0);
+    text("RESET", 34, 361);
+};
+  //if button is clicked, score is set to 0  
+   var mouseClicked = function(){
+    if(mouseX > buttonX && mouseX < buttonX + buttonW && mouseY > buttonY      && mouseY < buttonY + buttonH){
+        score = 0;
+   //balls go back to beginning at 2
+     //empties the ball array;
+        maxBalls = (2);
+      //resets timer
+        initialTime = 0;
+        initialTime = millis();
+    }
+   };
+
+//paddle function
+var drawPaddle = function(paddleX, paddleY, paddleW, paddleH){
+    fill(237, 99, 209);
+    rect(paddleX, paddleY, paddleW, paddleH);
+};
+
+//ball function
+var drawBall = function(xPosition, yPosition, ballColor, ballR){
+    noStroke();
+    fill(ballColor);
+    var bD = 2 * ballR; 
+    ellipse(xPosition, yPosition, bD, bD);
+    
+};
+
+//begins draw function
+draw = function() {
+    background(255, 255, 255);
+    noStroke();
+    //left box
+    fill(255, 189, 224);
+    rectangle(xrect, yrect, w, h);
+    //right box
+    fill(255, 232, 252);
+    rect(xrect+130, yrect, w+145, h);
+    //displays score and controls
+    fill(255, 232, 252);
+    rect(0, 220, 135, 30);
+    rect(0, 101, 135, 30);
+    fill(255, 117, 163);
+    textSize(25);
+    text("score: ", 23, 125);
+    fill(148, 53, 242);
+    text("controls: ", 9, 243);
+    textSize(17);
+    fill(0, 0, 0);
+    text("left", 45, 272);
+    text("right", 45, 292);
+    triangle(13, 265, 22, 272, 22, 259);
+    triangle(38, 286, 28, 292, 28, 280);
+    stroke(0, 0, 0);
+    strokeWeight(2);
+    line(19, 266, 35, 266);
+    line(14, 286, 30, 286);
+    noStroke();
+    
+//calls paddle
+if(keyIsPressed){
+    if(key.code === CODED){
+        if(keyCode === LEFT){
+        paddleX --; }
+        else if(keyCode === RIGHT){
+        paddleX++;
+        }
+    }
+}
+drawPaddle(paddleX, paddleY, paddleW, paddleH); 
+
+//calls reset button
+drawButton(buttonX, buttonY, buttonW, buttonH);
+
+//beginning of for loop
+//calls the ball function and draws the ball
+for (var i = 0; i<maxBalls; i++){
+  drawBall(xPosition[i], yPosition[i], ballColor[i], ballR);
+  
+//checks collision: balls bounce off paddle
+  var checkCol = checkCollision(xPosition[i], yPosition[i], ballR, paddleX, paddleY, paddleW, paddleH);
+   if (checkCol){
+     xSpeed[i] *= -1; 
+     ySpeed[i] *= -1;
+    //if ball hits paddle, add 5 points to score
+     score+= 1;
+ }
+ 
+//updates position
+  xPosition[i] += xSpeed[i]; 
+  yPosition[i] += ySpeed[i]; 
+  
+//allows for the balls to bounce off the walls
+ //canvas border constraints
+  //subtraction and addition of "random(-0.5, 0.5)" grants "wobble behavior"
+   if(xPosition[i] < 132){
+    xSpeed[i] = -xSpeed[i]-random(-0.5,0.5);}
+   if(xPosition[i] >= 400){
+    xSpeed[i] = -xSpeed[i]-random(-0.5,0.5);}
+   if(yPosition[i] <= 0){
+    ySpeed[i] = -ySpeed[i]+random(-0.5,0.5);}
+   if(yPosition[i] >= 400){
+    //subtracts 5 points from score if ball hits bottom
+     score -= 5;
+    ySpeed[i] = -ySpeed[i]+random(-0.5,0.5);} 
+ 
+//timer   
+ //adds a ball every 30 seconds until maximum number of balls is reached
+ var elapsedTime = millis() - initialTime;
+ //alarm (displays timer)
+   strokeWeight(2);
+   stroke(0, 0, 0);
+   line(29, 20, 52, 40);
+   line(90, 20, 70, 40);
+   line(76, 82, 45, 40);
+   line(41, 82, 63, 40);
+   strokeWeight(5);
+   stroke(255, 97, 102);
+   fill(255, 255, 255);
+   ellipse(59, 52, 50, 50);
+   noStroke();
+   fill(255, 249, 143);
+   arc(41, 27, 25, 22, 128, 309);
+   arc(81, 30, 25, 22, 226, 416);
+   fill(0, 0, 0);
+   rect(57, 21, 2, 3);
+   rect(54, 16, 9, 5);
+   fill(0, 0, 0);
+   textSize(15);
+   //displays countdown
+   text(floor(elapsedTime/1000), 62, 58);
+   //"00:" text 
+   text("00:", 40, 58);
+ //every 30 seconds a ball is added
+   if(elapsedTime >= 30000){
+ //randomizes ball color
+   ballColor.push(color(random(0,255),random(0,255),random(0,255)));
+drawBall(xPosition[i], yPosition[i], ballColor[i], ballR);
+  xPosition.push(random(130, 400));
+  yPosition.push(0);
+  xSpeed.push(1);
+  ySpeed.push(1);
+  //randomizes ball color
+  maxBalls++;
+  //resets initial time
+     initialTime = millis();
+//ends timer 
+}
+
+//stops adding balls when there are 10
+    if(maxBalls>=10)
+    {maxBalls=10;}
+
+//ends for loop
+}
+
+//displays score
+fill(0, 0, 0);
+textSize(51);
+text(" " + score, 6, 194);
+
+//ends draw function
+};
